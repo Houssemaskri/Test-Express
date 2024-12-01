@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
-const Livre = require('../models/livre');
+const {Livre, ValidationSchema}  = require('../models/livre');
+
 
 /* GET livres listing. */
 router.get('/', async function(req, res, next) {
@@ -21,26 +22,23 @@ router.get('/genre/:genre', async function(req, res, next) {
 
 })
 
-/* GET form to add a new livre */
-router.get('/add', function(req, res, next) {
-  res.render('addLivre');
-  
-});
 
 /* POST a single livre. */
-router.post('/add',async function(req, res, next) {
-  const newLivre = new Livre({
-    
-    title : req.body.title,
-    author : req.body.author,
-    genre : req.body.genre,
-    price : req.body.price,
-    available : req.body.available,
-});
-
-const savedLivre = await newLivre.save();
-res.json(savedLivre);
-
+router.post('/add', async function(req, res, next) {
+  try {
+    await ValidationSchema.validate(req.body);
+    const newLivre = new Livre({
+      title: req.body.title,
+      author: req.body.author,
+      genre: req.body.genre,
+      price: req.body.price,
+      available: req.body.available,
+    });
+    const savedLivre = await newLivre.save();
+    res.json(savedLivre);
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding book', error });
+  }
 });
 
 router.delete('/:id', async function(req, res, next) {
